@@ -42,7 +42,7 @@ module HAProxyManager
       end
     end
   end
-  
+
   class HAPSocket
     def initialize(file)
       @file = file
