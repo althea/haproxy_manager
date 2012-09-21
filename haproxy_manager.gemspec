@@ -4,7 +4,7 @@ Gem::Specification.new do |s|
   s.name = "haproxy"
   s.version = HAProxyManager::VERSION
   s.platform = Gem::Platform::RUBY
-  s.authors = ["Sreekanth(sreeix)"]
+  s.authors = ["Sreekanth(sreeix)", "Smita Bhat(sbhat)"]
   s.email = ["gabbar@activesphere.com"]
   s.homepage = "https://github.com/althea/haproxy-manager"
   s.summary = 'HAproxy manager for controlling haproxy'

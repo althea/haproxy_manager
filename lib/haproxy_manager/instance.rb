@@ -29,7 +29,7 @@ module HAProxyManager
       @backends.keys
     end
 
-    def servers(backend=nil)
+    def servers(backend = nil)
       backend.nil? ? @backends.values.flatten : @backends[backend]
     end
 
