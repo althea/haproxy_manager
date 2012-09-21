@@ -1,7 +1,7 @@
 require File.expand_path("../lib/haproxy_manager/version.rb", __FILE__)
 
 Gem::Specification.new do |s|
-  s.name = "haproxy"
+  s.name = "haproxy_manager"
   s.version = HAProxyManager::VERSION
   s.platform = Gem::Platform::RUBY
   s.authors = ["Sreekanth(sreeix)", "Smita Bhat(sbhat)"]
