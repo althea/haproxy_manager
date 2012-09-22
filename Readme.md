@@ -48,8 +48,8 @@ haproxy.disable("preprod-app") # Disables a server with a given name in all the 
 haproxy.enable("preprod-app", "foo-farm") # Enables a server in a specific farm
 haproxy.enable("preprod-app") # Enables a server with a given name in all the available backends
 
-haproxy.weight("preprod-app", "foo-farm", 10) # Sets the weight to 10. The value can be between 0 - 255
-haproxy.weight("preprod-app", "foo-farm", 10%) # Reduces the weight of the server by 10%(of the value specified in the config)
-haproxy.weight("preprod-app", "foo-farm", 0%) # Reduces the weight of the server to 0. Useful for disabling the server.
-haproxy.weight("preprod-app", "foo-farm", 100%) # Increases the weight to the original configuration value. useful to bring the server back up after reducing the weight to 0%
+haproxy.weight("preprod-app", "foo-farm", "10") # Sets the weight to 10. The value can be between 0 - 255
+haproxy.weight("preprod-app", "foo-farm", "10%") # Reduces the weight of the server by 10%(of the value specified in the config)
+haproxy.weight("preprod-app", "foo-farm", "0%") # Reduces the weight of the server to 0. Useful for disabling the server.
+haproxy.weight("preprod-app", "foo-farm", "100%") # Increases the weight to the original configuration value. useful to bring the server back up after reducing the weight to 0%
 ```
