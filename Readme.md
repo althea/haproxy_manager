@@ -59,4 +59,7 @@ haproxy.weight("preprod-app", "foo-farm") # Returns the current weights setting.
 
 haproxy.info # provides information about the haproxy setup. The following is how it looks like. Most fields are self describing.
 {"Name" =>  "HAProxy", "Version" =>  "1.5-dev11", "Release_date" =>  "2012/06/04", "Nbproc" =>  "1", "Process_num" =>  "1", "Pid" =>  "4084", "Uptime" =>  "58d 3h50m53s", "Uptime_sec" => "5025053", "Memmax_MB" =>  "0", "Ulimit-n" =>  "40029", "Maxsock" =>  "40029", "Maxconn" =>  "20000", "Hard_maxconn =>  "20000", "Maxpipes" => "0", "CurrConns" => "0", "PipesUsed" => "0", "PipesFree" => " 0", "ConnRate" => " 0", "ConnRateLimit" => " 0", "MaxConnRate" => " 69", "Tasks" => " 10", "Run_queue" => " 1", "Idle_pct" => "100", "node" => " The server name", "description" => "Our Awesome Load balancer"}
+
+haproxy.reset_counters # Clears HAProxy counters. Except Global counters
+haproxy.reset_counters(:all) # Clears All HAProxy counters. This is the equivalent of a restart
 ```

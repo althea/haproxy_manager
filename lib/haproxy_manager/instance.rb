@@ -56,7 +56,7 @@ module HAProxyManager
 
     # resets Haproxy counters. If no option is specified backend and frontend counters are cleared, but
     # cumulative counters are not cleared. The cumulative counters can be cleared by passing the option of
-    # all to the method, in that case all the counters are cleared. This is similar to a restart.
+    # :all to the method, in that case all the counters are cleared. This is similar to a restart.
     # This is useful to reset stats after for example an incident.
     def reset_counters(option = "")
       @socket.execute "clear counters {option}", &@print_response
