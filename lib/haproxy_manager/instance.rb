@@ -46,8 +46,17 @@ module HAProxyManager
       end
     end
 
-    def stats(server, backend)
-    #   TODO
+    def stats
+      stats = @socket.execute( "show stat -1 -1 -1" )
+      headers = stats[0].split(",")
+      stats[1..-1].inject({}) do |hash, line|
+        data = line.split(","); backend = data[0]; server = data[1]; rest = data[2..-1]
+        hash[backend] = {} if( hash[backend].nil?)
+        hash[backend][server] = {}.tap do |server_hash|
+          headers[2..-1].each_with_index{|x, i| server_hash[x]= rest[i]}
+        end
+        hash
+      end
     end
 
     def servers(backend = nil)
