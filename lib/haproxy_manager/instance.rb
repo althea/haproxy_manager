@@ -33,10 +33,21 @@ module HAProxyManager
       @socket.execute( "show info").inject({}){|hash, item| x = item.split(":"); hash.merge(x[0].strip =>  x[1].strip)}
     end
 
+    # Sets weight for the server. If a numeric value is provider, that will become the absolute weight. It can be between 0 -256
+    # If a weight has been provided ending with % then the weight is reduced by that percentage. It has to be between 0% - 100%
+    # Weight of a server defines, how many requests are passed to it.
+    def weights(server, backend, weight)
+      @socket.execute "set weight #{backend}/#{server} #{weight}"
+    end
+
+    def stats(server, backend)
+    #   TODO
+    end
+
     def servers(backend = nil)
       backend.nil? ? @backends.values.flatten : @backends[backend]
     end
-    
+
     # resets Haproxy counters. If no option is specified backend and frontend counters are cleared, but
     # cumulative counters are not cleared. The cumulative counters can be cleared by passing the option of
     # all to the method, in that case all the counters are cleared. This is similar to a restart.
