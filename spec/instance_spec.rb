@@ -56,11 +56,23 @@ module HAProxyManager
         @instance.disable("preprod-bg")
       end
     end
+    describe "weights" do
+      it "gets current weight" do
+        HAPSocket.any_instance.expects(:execute).with('get weight foo-farm/preprod-bg').returns(["10 (initial 12)"])
+        weights = @instance.weights("preprod-bg","foo-farm" )
+        weights[:current].should == 10
+        weights[:initial].should == 12
+      end
+
+      it "sets weight if weight is specified" do
+        HAPSocket.any_instance.expects(:execute).with('set weight foo-farm/preprod-bg 20')
+        weights = @instance.weights "preprod-bg","foo-farm", 20
+      end
+    end
 
     describe "info about haproxy" do
       it "has description/version and uptime" do
         HAPSocket.any_instance.expects(:execute).with("show info").returns(@info_response)
-        
         info = @instance.info
         info["description"].should == 'Our awesome load balancer'
         info["Version"].should == '1.5-dev11'

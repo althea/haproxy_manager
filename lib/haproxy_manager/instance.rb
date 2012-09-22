@@ -36,8 +36,14 @@ module HAProxyManager
     # Sets weight for the server. If a numeric value is provider, that will become the absolute weight. It can be between 0 -256
     # If a weight has been provided ending with % then the weight is reduced by that percentage. It has to be between 0% - 100%
     # Weight of a server defines, how many requests are passed to it.
-    def weights(server, backend, weight)
-      @socket.execute "set weight #{backend}/#{server} #{weight}"
+    def weights(server, backend, weight=nil)
+      if(weight.nil?)
+        weight = @socket.execute "get weight #{backend}/#{server}"
+        /(\d*)\s\(initial\s(\d*)\)/.match( weight[0])
+        {:current => $1.to_i, :initial => $2.to_i}
+      else
+        @socket.execute "set weight #{backend}/#{server} #{weight}"
+      end
     end
 
     def stats(server, backend)
