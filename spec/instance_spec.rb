@@ -21,6 +21,10 @@ module HAProxyManager
         "foo-https-farm,preprod-bg,0,0,0,0,30,0,0,0,,0,,0,0,0,0,DOWN,5,1,0,4,4,2538799,4603673,,1,2,2,,0,,2,0,,0,L4CON,,0,0,0,0,0,0,0,0,,,,0,0,",
         "foo-https-farm,preprod-test,0,0,0,0,30,0,0,0,,0,,0,0,0,0,DOWN,5,1,0,0,1,5102837,5102837,,1,2,3,,0,,2,0,,0,L4CON,,0,0,0,0,0,0,0,0,,,,0,0,",
         "foo-https-farm,BACKEND,0,0,0,3,200,6469,2675933,71871179,0,0,,254,30,3,0,UP,12,1,0,,142,10893,300288,,1,2,0,,1948,,1,0,,2,,,,0,5912,181,11,313,52,,,,,501,0,"]
+      @info_422 = ["Name: HAProxy", "Version: 1.4.22", "Release_date: 2012/08/09", "Nbproc: 1", "Process_num: 1",
+                   "Pid: 3803", "Uptime: 0d 2h46m58s", "Uptime_sec: 10018", "Memmax_MB: 0", "Ulimit-n: 536",
+                   "Maxsock: 536", "Maxconn: 256", "Maxpipes: 0", "CurrConns: 1", "PipesUsed: 0", "PipesFree: 0",
+                   "Tasks: 12", "Run_queue: 1", "node: haproxy1.company.com", "description:"]
     end
 
 
@@ -147,6 +151,14 @@ module HAProxyManager
         info["description"].should == 'Our awesome load balancer'
         info["Version"].should == '1.5-dev11'
         info["Uptime"].should == '58d 3h50m53s'
+      end
+
+      it "does not choke on values that do not exist" do
+        HAPSocket.any_instance.expects(:execute).with("show info").returns(@info_422)
+        info = @instance.info
+        info["description"].should == ''
+        info["Version"].should == '1.4.22'
+        info["Uptime"].should == '0d 2h46m58s'
       end
     end
   end

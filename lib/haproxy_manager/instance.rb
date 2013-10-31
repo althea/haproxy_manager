@@ -43,8 +43,15 @@ module HAProxyManager
       @backends.keys
     end
 
+
+
     def info
-      @socket.execute( "show info").inject({}){|hash, item| x = item.split(":"); hash.merge(x[0].strip =>  x[1].strip)}
+      @socket.execute( "show info").inject({}){|hash, item|
+        x = item.split(":")
+        key = x[0].strip if ! x[0].nil?
+        value ||= x[1]|| ""
+        hash.merge(key => value.strip)
+      }
     end
 
     # Sets weight for the server. If a numeric value is provider, that will become the absolute weight. It can be between 0 -256
