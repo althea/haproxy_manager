@@ -23,12 +23,29 @@ module HAProxyManager
         "foo-https-farm,BACKEND,0,0,0,3,200,6469,2675933,71871179,0,0,,254,30,3,0,UP,12,1,0,,142,10893,300288,,1,2,0,,1948,,1,0,,2,,,,0,5912,181,11,313,52,,,,,501,0,"]
     end
 
-    before(:each) do
-      HAPSocket.any_instance.expects(:execute).once.returns(@stat_response)
-      @instance = Instance.new("foo")
+
+
+    describe 'multiple instances' do
+      before(:each) do
+        HAPSocket.any_instance.expects(:execute).times(3).returns(@stat_response)
+      end
+
+      # tests that we can create three instances given a array of sockets
+      it 'can create 3 new instances via unique sockets' do
+        sockets = ['/tmp/xxx1', '/tmp/xxx2', '/tmp/xxx3']
+        proxies = Instance.create_instances(sockets)
+        proxies.should be_instance_of Hash
+        proxies.keys.length.should eq(3)
+        proxies.values.length.should eq(3)
+      end
     end
 
     describe "creation" do
+      before(:each) do
+        HAPSocket.any_instance.expects(:execute).once.returns(@stat_response)
+        @instance = Instance.new("foo")
+      end
+
       it "parses stats and lists backends" do
         @instance.backends.size.should == 2
         @instance.backends.should include "foo-farm"
@@ -46,6 +63,12 @@ module HAProxyManager
     end
 
     describe "enables/disables servers" do
+
+      before(:each) do
+        HAPSocket.any_instance.expects(:execute).once.returns(@stat_response)
+        @instance = Instance.new("foo")
+      end
+
       it "enables a server" do
         HAPSocket.any_instance.expects(:execute).with('enable server foo-farm/preprod-bg')
         @instance.enable("preprod-bg", "foo-farm")
@@ -69,6 +92,11 @@ module HAProxyManager
       end
     end
     describe "weights" do
+      before(:each) do
+        HAPSocket.any_instance.expects(:execute).once.returns(@stat_response)
+        @instance = Instance.new("foo")
+      end
+
       it "gets current weight" do
         HAPSocket.any_instance.expects(:execute).with('get weight foo-farm/preprod-bg').returns(["10 (initial 12)"])
         weights = @instance.weights("preprod-bg","foo-farm" )
@@ -82,6 +110,12 @@ module HAProxyManager
       end
     end
     describe "stats" do
+
+      before(:each) do
+        HAPSocket.any_instance.expects(:execute).once.returns(@stat_response)
+        @instance = Instance.new("foo")
+      end
+
       it "show for all servers" do
         HAPSocket.any_instance.expects(:execute).with('show stat -1 -1 -1').returns(@allstats)
         stats = @instance.stats
@@ -101,6 +135,12 @@ module HAProxyManager
     end
 
     describe "info about haproxy" do
+
+      before(:each) do
+        HAPSocket.any_instance.expects(:execute).once.returns(@stat_response)
+        @instance = Instance.new("foo")
+      end
+
       it "has description/version and uptime" do
         HAPSocket.any_instance.expects(:execute).with("show info").returns(@info_response)
         info = @instance.info
