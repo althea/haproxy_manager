@@ -8,6 +8,20 @@ module HAProxyManager
       @backends  = backends.inject({}){|hash, items| (hash[items[0]] ||=[]) << items[1]; hash}
     end
 
+    # given a list of socket files, return a hash of Instances with the filename as keys
+    def self.create_instances(sockets=[])
+      instances = {}
+      sockets.each do | socket |
+        begin
+          instances[socket] = HAProxyManager::Instance.new(socket)
+        rescue exception => e
+          # Can't open the socket for whatever reason so just skip to the next
+          next
+        end
+      end
+      instances
+    end
+
     # Diables a server in the server in a backend for maintenance.
     # If backend is not specified then all the backends in which the serverid exists are disabled.
     # A disabled server shows up as in Maintance mode.
@@ -29,8 +43,15 @@ module HAProxyManager
       @backends.keys
     end
 
+
+
     def info
-      @socket.execute( "show info").inject({}){|hash, item| x = item.split(":"); hash.merge(x[0].strip =>  x[1].strip)}
+      @socket.execute( "show info").inject({}){|hash, item|
+        x = item.split(":")
+        key = x[0].strip if ! x[0].nil?
+        value ||= x[1]|| ""
+        hash.merge(key => value.strip)
+      }
     end
 
     # Sets weight for the server. If a numeric value is provider, that will become the absolute weight. It can be between 0 -256

@@ -37,7 +37,7 @@ API
 ======
 ```Ruby
 
-haproxy = HAProxyManager.new ('path to haproxy socket')
+haproxy = HAProxyManager::Instance.new ('path to haproxy socket')
 
 haproxy.backends # Lists all the backends available
 haproxy.servers("foo-farm")  # List all the servers available in the given backend
