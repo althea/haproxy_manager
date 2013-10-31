@@ -37,7 +37,11 @@ module HAProxyManager
       # tests that we can create three instances given a array of sockets
       it 'can create 3 new instances via unique sockets' do
         sockets = ['/tmp/xxx1', '/tmp/xxx2', '/tmp/xxx3']
-        proxies = Instance.create_instances(sockets)
+        proxies = HAProxyManager::Instance.create_instances(sockets)
+        proxies.each do | socket, proxy|
+          proxy.backends
+
+        end
         proxies.should be_instance_of Hash
         proxies.keys.length.should eq(3)
         proxies.values.length.should eq(3)
@@ -50,10 +54,17 @@ module HAProxyManager
         @instance = Instance.new("foo")
       end
 
+      it 'should return a hash of backend instances' do
+        backend_instances = @instance.backend_instances
+        backend_instances.size.should == 2
+        backend_instances.keys.should include('foo-farm')
+        backend_instances.keys.should include('foo-https-farm')
+      end
+
       it "parses stats and lists backends" do
         @instance.backends.size.should == 2
-        @instance.backends.should include "foo-farm"
-        @instance.backends.should include "foo-https-farm"
+        @instance.backends.keys.should include "foo-farm"
+        @instance.backends.keys.should include "foo-https-farm"
       end
 
       it "parses stats and lists servers" do
@@ -78,7 +89,7 @@ module HAProxyManager
         @instance.enable("preprod-bg", "foo-farm")
       end
 
-      it "enables a all servers in multiple backends" do
+      it "enables all servers in multiple backends" do
         HAPSocket.any_instance.expects(:execute).with('enable server foo-farm/preprod-bg')
         HAPSocket.any_instance.expects(:execute).with('enable server foo-https-farm/preprod-bg')
         @instance.enable("preprod-bg")

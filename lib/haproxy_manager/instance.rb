@@ -1,11 +1,12 @@
 require 'socket'
 module HAProxyManager
   class Instance
+    attr_reader :backends, :backend_instances
+
     def initialize(socket)
       @socket = HAPSocket.new(socket)
       @print_response = Proc.new {|response| puts response}
-      backends = @socket.execute( "show stat -1 4 -1" )[1..-1].collect{|item| item.split(",")[0..1]}
-      @backends  = backends.inject({}){|hash, items| (hash[items[0]] ||=[]) << items[1]; hash}
+
     end
 
     # given a list of socket files, return a hash of Instances with the filename as keys
@@ -39,11 +40,33 @@ module HAProxyManager
       end
     end
 
-    def backends
-      @backends.keys
+    # rereads the backend data each time when refresh is true
+    def backend_instances(refresh=false)
+      if @backend_instances.nil? or refresh
+        @backend_instances = {}
+        backend_data = @socket.execute( "show stat -1 4 -1" )[1..-1].collect{|item| item.split(",")[0..1]}
+        backend_servers = backend_data.inject({}){|hash, items|
+          (hash[items[0]] ||=[]) << items[1]; hash
+        }
+        backend_servers.each do |backend, servers|
+          @backend_instances[backend] = HAProxyManager::Backend.new(backend, @socket)
+        end
+      end
+      @backend_instances
     end
 
-
+    # This is actually redundant data kept here for backwards compatibility
+    # You should really be using backend_instances now
+    def backends
+      # Lets cache the values and return the cache
+      if @backends.nil?
+        @backends = {}
+        backend_instances.each do | name, backend|
+          @backends[name] = backend.servers
+        end
+      end
+      @backends
+    end
 
     def info
       @socket.execute( "show info").inject({}){|hash, item|
@@ -80,8 +103,22 @@ module HAProxyManager
       end
     end
 
+    # returns an array of servers
     def servers(backend = nil)
-      backend.nil? ? @backends.values.flatten : @backends[backend]
+      servers = []
+      if backend.nil?
+        # return all servers
+        backend_instances.each_value do | backend|
+          servers << backend.servers
+        end
+      else
+        begin
+          servers = backend_instances[backend].servers
+        rescue KeyError => e
+           "The backend #{backend} is not a valid argument"
+        end
+      end
+      return servers.flatten
     end
 
     # resets Haproxy counters. If no option is specified backend and frontend counters are cleared, but
@@ -93,9 +130,15 @@ module HAProxyManager
     end
 
     private
+    # returns array will all backends the server belongs to
     def all_servers(serverid, backend)
-      if(backend.nil?)
-        items = @backends.collect{|a, b| [a, serverid] if b.include?(serverid)}.compact
+      # return all backends the serverid belongs to
+      if backend.nil? or ! backend_instances[backend].has_server?(serverid)
+        items = []
+        backend_instances.each do |name, backend|
+          next if ! backend.has_server?(serverid)
+          items << [name, serverid]
+        end
       else
         items = [[backend, serverid]]
       end
