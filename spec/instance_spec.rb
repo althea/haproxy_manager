@@ -31,7 +31,7 @@ module HAProxyManager
 
     describe 'multiple instances' do
       before(:each) do
-        HAPSocket.any_instance.expects(:execute).times(3).returns(@stat_response)
+        HAPSocket.any_instance.stubs(:execute).returns(@stat_response)
       end
 
       # tests that we can create three instances given a array of sockets
@@ -50,7 +50,7 @@ module HAProxyManager
 
     describe "creation" do
       before(:each) do
-        HAPSocket.any_instance.expects(:execute).once.returns(@stat_response)
+        HAPSocket.any_instance.stubs(:execute).returns(@stat_response)
         @instance = Instance.new("foo")
       end
 
@@ -71,16 +71,21 @@ module HAProxyManager
         @instance.servers('foo-farm').size.should == 3
       end
       it "understands servers without backend are all servers" do
-        @instance.servers.size.should == 6
+        @instance.servers.size.should == 3
         @instance.servers.should include "preprod-bg"
         @instance.servers.should include "preprod-test"
+      end
+      it 'should return a hash of server instances from all backends that are unqiue' do
+        @instance.server_instances.should be_instance_of(Hash)
+        @instance.server_instances.length.should eq(3)
+
       end
     end
 
     describe "enables/disables servers" do
 
       before(:each) do
-        HAPSocket.any_instance.expects(:execute).once.returns(@stat_response)
+        HAPSocket.any_instance.stubs(:execute).returns(@stat_response)
         @instance = Instance.new("foo")
       end
 
@@ -108,7 +113,7 @@ module HAProxyManager
     end
     describe "weights" do
       before(:each) do
-        HAPSocket.any_instance.expects(:execute).once.returns(@stat_response)
+        HAPSocket.any_instance.stubs(:execute).returns(@stat_response)
         @instance = Instance.new("foo")
       end
 
@@ -124,10 +129,11 @@ module HAProxyManager
         weights = @instance.weights "preprod-bg","foo-farm", 20
       end
     end
+
     describe "stats" do
 
       before(:each) do
-        HAPSocket.any_instance.expects(:execute).once.returns(@stat_response)
+        HAPSocket.any_instance.stubs(:execute).returns(@stat_response)
         @instance = Instance.new("foo")
       end
 
@@ -152,7 +158,7 @@ module HAProxyManager
     describe "info about haproxy" do
 
       before(:each) do
-        HAPSocket.any_instance.expects(:execute).once.returns(@stat_response)
+        HAPSocket.any_instance.stubs(:execute).returns(@stat_response)
         @instance = Instance.new("foo")
       end
 

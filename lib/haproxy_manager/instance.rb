@@ -1,7 +1,7 @@
-require 'socket'
+
 module HAProxyManager
   class Instance
-    attr_reader :backends, :backend_instances
+    attr_reader :backends, :backend_instances, :server_instances
 
     def initialize(socket)
       @socket = HAPSocket.new(socket)
@@ -27,19 +27,18 @@ module HAProxyManager
     # If backend is not specified then all the backends in which the serverid exists are disabled.
     # A disabled server shows up as in Maintance mode.
     def disable(serverid, backend = nil)
-      all_servers(serverid, backend).each do |item|
-        @socket.execute "disable server #{item[0]}/#{item[1]}", &@print_response
-      end
+      server = server_instances[serverid]
+      server.disable(backend)
     end
 
     # Enables a server in the server in a backend.
     # If backend is not specified then all the backends in which the serverid exists are enabled.
     def enable(serverid, backend = nil)
-      all_servers(serverid, backend).each do |item|
-        @socket.execute "enable server #{item[0]}/#{item[1]}", &@print_response
-      end
+      server = server_instances[serverid]
+      server.enable(backend)
     end
 
+    # returns a hash of backend objects
     # rereads the backend data each time when refresh is true
     def backend_instances(refresh=false)
       if @backend_instances.nil? or refresh
@@ -103,22 +102,34 @@ module HAProxyManager
       end
     end
 
-    # returns an array of servers
+    # returns a hash of server instances objects that contain unique server names
+    def server_instances(refresh=false)
+      if @server_instances.nil? or refresh
+        @server_instances = {}
+        backend_instances.each do |key, backend|
+          @server_instances = @server_instances.merge(backend.servers)
+        end
+      end
+      @server_instances
+    end
+
+    # returns an array of servers that are uqniue in case the same server exists in
     def servers(backend = nil)
-      servers = []
+      my_servers = []
       if backend.nil?
         # return all servers
         backend_instances.each_value do | backend|
-          servers << backend.servers
+          my_servers << backend.server_names
         end
       else
         begin
-          servers = backend_instances[backend].servers
+          my_servers = backend_instances[backend].server_names
         rescue KeyError => e
            "The backend #{backend} is not a valid argument"
         end
       end
-      return servers.flatten
+      # return a list of serv
+      my_servers.flatten.uniq
     end
 
     # resets Haproxy counters. If no option is specified backend and frontend counters are cleared, but
@@ -129,38 +140,8 @@ module HAProxyManager
       @socket.execute "clear counters {option}", &@print_response
     end
 
-    private
-    # returns array will all backends the server belongs to
-    def all_servers(serverid, backend)
-      # return all backends the serverid belongs to
-      if backend.nil? or ! backend_instances[backend].has_server?(serverid)
-        items = []
-        backend_instances.each do |name, backend|
-          next if ! backend.has_server?(serverid)
-          items << [name, serverid]
-        end
-      else
-        items = [[backend, serverid]]
-      end
-    end
+
   end
 
-  class HAPSocket
-    def initialize(file)
-      @file = file
-    end
 
-    def execute(cmd, &block)
-      socket = UNIXSocket.new(@file)
-      socket.write("#{cmd};")
-      response = []
-      socket.each do |line|
-        data = line.strip
-        next if data.empty?
-        response << data
-      end
-      yield response if block_given?
-      response
-    end
-  end
 end
