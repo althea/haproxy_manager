@@ -1,3 +1,4 @@
+require 'json'
 module HAProxyManager
   class Backend
       attr_reader :name, :servers, :socket
@@ -13,6 +14,7 @@ module HAProxyManager
         servers.keys
       end
 
+      # returns the number of servers in the pool no matter what status they have
       def count
         servers.length
       end
@@ -21,7 +23,7 @@ module HAProxyManager
         if @servers.length < 1
           srv_names = stats.keys - ['FRONTEND', 'BACKEND']
           srv_names.each do | srv|
-            @servers[srv] = Server.new(srv, socket)
+            @servers[srv] = HAProxyManager::Server.new(srv, socket)
           end
         end
         @servers
@@ -102,5 +104,42 @@ module HAProxyManager
       def stats_names
         stats.keys
       end
+
+      # returns the number of servers that have status of up
+      def up_count
+        servers_up.length
+      end
+
+      # returns the number of servers that have status of down
+      def down_count
+        servers_down.length
+      end
+
+      # returns the number of servers that have status of maint
+      def maint_count
+        servers_maint.length
+      end
+
+      # returns an array of the servers that are currently up
+      def servers_up
+        servers.values.find_all do |server|
+           server.up?(name)
+        end
+      end
+
+      # returns an array of the servers that are currently down
+      def servers_down
+        servers.values.find_all do |server|
+          server.down?(name)
+        end
+      end
+
+      # returns an array of the servers that are currently in maint mode
+      def servers_maint
+        servers.values.find_all do |server|
+          server.maint?(name)
+        end
+      end
+
   end
 end

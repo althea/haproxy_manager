@@ -1,3 +1,4 @@
+require 'json'
 module HAProxyManager
   class Server
     attr_reader :backends, :name, :status, :socket
@@ -62,34 +63,32 @@ module HAProxyManager
       end
     end
 
-    # get the status of the server for all backends or just one backend
-    # If any backend has marked the server as down, the status will be down, otherwise up
-    def status(backend=nil)
+    # get the status of the server for just one backend
+    # If all backends marked the server as down, the status will be down, otherwise up
+    # Note: this does not account for servers in maint mode
+    def status(backend)
       if backend.nil? or ! has_backend?(backend)
-        if stats.detect { |key, value| value['status'] == 'DOWN' }
-          'DOWN'
-        else
-          'UP'
-        end
+        raise 'InvalidBackendName'
       else
          stats["#{backend}/#{name}"].fetch('status')
       end
-
     end
 
     # returns boolean if the server is up in all backends.  Passing a backend will return boolean if up is in
     # the specified backend
-    def up?(backend=nil)
+    def up?(backend)
       status(backend) == 'UP'
     end
 
     # returns boolean if the server is down in all backends.  Passing a backend will return boolean if down is in
     # the specified backend
-    def down?(backend=nil)
+    def down?(backend)
       status(backend) == 'DOWN'
     end
 
-
+    def maint?(backend)
+      status(backend) == 'MAINT'
+    end
 
     def method_missing(method, *args, &block)
       if not stat_names.include?(method.to_s)
@@ -173,6 +172,11 @@ module HAProxyManager
       end
       mystats
     end
+
+    def stats_to_json
+      JSON.pretty_generate(stats)
+    end
+
     private
 
     def total(hash)

@@ -14,7 +14,7 @@ module HAProxyManager
                    "foo-farm,FRONTEND,,,0,150,2000,165893,38619996,3233457381,0,0,6504,,,,,OPEN,,,,,,,,,1,1,0,,,,0,0,0,69,,,,0,136147,2128,6654,20955,9,,0,144,165893,,,",
                    "foo-farm,preprod-app,0,9,0,60,60,139066,34839081,3222850212,,0,,3,725,0,0,UP,10,1,0,583,148,10893,257935,,1,1,1,,114847,,2,0,,88,L7OK,200,150,0,135827,2128,147,230,0,0,,,,20,11,",
                    "foo-farm,preprod-bg,0,0,0,3,30,31,14333,380028,,0,,0,9,4,2,DOWN,5,1,0,4,10,2538799,4603702,,1,1,2,,6,,2,0,,2,L4CON,,0,0,16,0,0,0,0,0,,,,1,0,",
-                   "foo-farm,preprod-test,0,0,0,0,30,0,0,0,,0,,0,0,0,0,DOWN,5,1,0,0,1,5102839,5102839,,1,1,3,,0,,2,0,,0,L4CON,,0,0,0,0,0,0,0,0,,,,0,0,",
+                   "foo-farm,preprod-test,0,0,0,0,30,0,0,0,,0,,0,0,0,0,MAINT,5,1,0,0,1,5102839,5102839,,1,1,3,,0,,2,0,,0,L4CON,,0,0,0,0,0,0,0,0,,,,0,0,",
                    "foo-farm,BACKEND,0,84,0,150,200,159082,38619996,3233457381,0,0,,19991,734,4,2,UP,10,1,0,,148,10893,300268,,1,1,0,,114853,,1,0,,144,,,,0,135843,2128,147,20955,9,,,,,21,11,",
                    "foo-https-farm,FRONTEND,,,0,3,2000,6545,2675933,71871179,0,0,76,,,,,OPEN,,,,,,,,,1,2,0,,,,0,0,0,3,,,,0,5912,181,82,313,57,,0,3,6545,,,",
                    "foo-https-farm,preprod-app,0,0,0,3,60,6219,2577996,71804141,,0,,1,30,3,0,UP,12,1,0,580,142,10893,257923,,1,2,1,,1948,,2,0,,2,L7OK,200,70,0,5912,181,11,29,0,0,,,,501,0,",
@@ -34,7 +34,7 @@ module HAProxyManager
       HAProxyManager::HAPSocket.any_instance.stubs(:execute).returns(@allstats)
 
       instance = HAProxyManager::Instance.new("foo")
-      @backend = instance.backend_instances.to_a.first.last
+      @backend = instance.backend_instances['foo-farm']
     end
 
     it 'should create a backend instance' do
@@ -107,7 +107,33 @@ module HAProxyManager
 
     it 'should disable backend servers' do
       @backend.disable.should be_true
+    end
 
+    it 'should return up count of 1' do
+       @backend.up_count.should eq(1)
+    end
+
+    it 'should return down count of 1' do
+       @backend.down_count.should eq(1)
+    end
+
+    it 'should return maint count of 1' do
+       @backend.maint_count.should eq(1)
+    end
+
+    it 'should return an array of servers that are up' do
+       @backend.servers_up.should be_instance_of(Array)
+       @backend.servers_up.length.should eq(1)
+    end
+
+    it 'should return an array of servers that are down' do
+      @backend.servers_down.should be_instance_of(Array)
+      @backend.servers_down.length.should eq(1)
+    end
+
+    it 'should return an array of servers that are maint' do
+      @backend.servers_maint.should be_instance_of(Array)
+      @backend.servers_maint.length.should eq(1)
     end
 
     it 'should enable backend servers' do
@@ -116,6 +142,10 @@ module HAProxyManager
 
     it 'should return a count of servers' do
       @backend.count.should eq(3)
+    end
+
+    it 'should return json listing' do
+      expect{@backend.stats_to_json}.to_not raise_error
     end
 
   end
