@@ -100,6 +100,16 @@ module HAProxyManager
         @instance.enable("preprod-bg")
       end
 
+      it 'when enabling it raises an error when the serverid does not exist' do
+        expect{ @instance.enable('foo') }.to raise_error(RuntimeError)
+
+      end
+
+      it 'when disabling it raises and error when the serverid does not exist' do
+        expect{ @instance.disable('foo') }.to raise_error(RuntimeError)
+
+      end
+
       it "disables a server" do
         HAPSocket.any_instance.expects(:execute).with('disable server foo-farm/preprod-bg')
         @instance.disable("preprod-bg", "foo-farm")

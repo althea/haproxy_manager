@@ -27,15 +27,23 @@ module HAProxyManager
     # If backend is not specified then all the backends in which the serverid exists are disabled.
     # A disabled server shows up as in Maintance mode.
     def disable(serverid, backend = nil)
-      server = server_instances[serverid]
-      server.disable(backend)
+      if server_instances.has_key?(serverid)
+        server = server_instances[serverid]
+        server.disable(backend)
+      else
+        raise "InvalidServerId"
+      end
     end
 
     # Enables a server in the server in a backend.
     # If backend is not specified then all the backends in which the serverid exists are enabled.
     def enable(serverid, backend = nil)
-      server = server_instances[serverid]
-      server.enable(backend)
+      if server_instances.has_key?(serverid)
+        server = server_instances[serverid]
+        server.enable(backend)
+      else
+        raise "InvalidServerId"
+      end
     end
 
     # returns a hash of backend objects
