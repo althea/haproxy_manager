@@ -18,5 +18,21 @@ module HAProxyManager
       yield response if block_given?
       response
     end
+
+    # returns bool if socket is available
+    def self.available?(file)
+      HAPSocket.new(file).available?
+    end
+
+    # returns bool if socket is available
+    def available?
+      begin
+        execute('show info')
+        true
+      rescue Exception => e
+        false
+      end
+    end
+
   end
 end
