@@ -33,12 +33,61 @@ Installation
   Add the following where approporiate(eg. deploy.rb)
       require "haproxy_manager"
 
+Release Notes
+=============
+Version 0.2 opens up a bunch of new possibilities by allowing the user to interact with the backend or server object
+directly.  Additionally the API is now more object oriented.  Example:
+
+```Ruby
+
+serverobj.disable('foo-farm')
+
+# get the stats for the server
+serverobj.stats
+
+# use any stat name and get value for all backends and calculate total across all backends
+serverobj.smax  => {"foo-farm/bin"=>"34839081", "foo-https-farm/bin"=>"2577996", "total"=>37417077}
+
+```
+
 API
 ======
 ```Ruby
 
 haproxy = HAProxyManager::Instance.new ('path to haproxy socket')
 
+
+
+# New API Commands 0.2 API
+haproxy.backend_instances  # Returns a hash of backend instances where the backend name is the key
+haproxy.server_instances  # Returns a hash of server instances where the server name is the key
+
+# New Backend API  (See class for more info)
+foo_farm = haproxy.backend_instances('foo-farm')
+foo_farm_servers = foo_farm.servers
+foo_farm.up?  # returns the status of the backend
+foo_farm.up_count  # returns the number of servers up in the backend
+foo_farm.disable  # disable the entire backend
+foo_farm.smax     # returns the value of smax for the backend (uses method missing)
+foo_farm.bin       # returns the value of bytes in for the backend (uses method missing)
+
+# New Server API  (See class for more info)
+# because the server can be used in multiple backends many methods require the backend name to be passed in
+all_servers = haproxy.server_instances
+foo_farm_servers = haproxy.backend_instances('foo-farm').servers
+foo_farm_servers.each do | name, server|
+   puts "Info for #{server.name} = #{server.status('foo-farm')}"
+   puts "Backends: #{server.backends.join("\n")}"
+   puts "#{server.weight('foo-farm')"
+   puts "#{server.smax}"
+end
+
+# New Hapsocket API 0.2 API
+# The socket class has been moved to its own file and a new Class method has been added to determine if the socket is
+# available should you need to determine if the socket can be opened
+HAPSocket.available?('/home/haproxy/sockets/socketname')  # returns boolean
+
+# below is a list of API calls that were used primarly in the 0.1 API but are still valid in 0.2 API
 haproxy.backends # Lists all the backends available
 haproxy.servers("foo-farm")  # List all the servers available in the given backend
 

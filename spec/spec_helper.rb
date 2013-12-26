@@ -1,3 +1,4 @@
+require 'json'
 require 'rspec'
 require File.expand_path('../../lib/haproxy_manager', __FILE__)
 
